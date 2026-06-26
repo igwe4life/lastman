@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0b1020" />
+    <title>Last Man Standing — POC</title>
+    <link rel="stylesheet" href="/src/ui/ui.css" />
+  </head>
+  <body>
+    <!-- WebGL canvas is created by the engine and appended to #app -->
+    <div id="app"></div>
+
+    <!-- Loading screen -->
+    <div id="loading-screen">
+      <div class="loading-inner">
+        <h1 class="game-title">LAST MAN STANDING</h1>
+        <p class="game-subtitle">Every person matters.</p>
+        <div class="loading-bar"><div id="loading-bar-fill"></div></div>
+        <p id="loading-status">Loading…</p>
+      </div>
+    </div>
+
+    <!-- Start / title screen (shown after assets load) -->
+    <div id="start-screen" class="hidden">
+      <div class="start-inner">
+        <h1 class="game-title">LAST MAN STANDING</h1>
+        <p class="game-subtitle">A messenger has been sent to reach the final unreached person.</p>
+        <button id="start-button" class="primary-button">Begin Journey</button>
+        <ul class="controls-list">
+          <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</li>
+          <li><kbd>Shift</kbd> Run</li>
+          <li><kbd>Space</kbd> Jump</li>
+          <li><kbd>E</kbd> Help a person</li>
+          <li><kbd>B</kbd> Supply shop</li>
+          <li><kbd>Drag</kbd> Look around</li>
+          <li><kbd>Esc</kbd> Pause</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- In-game HUD is injected by src/ui/UI.ts into #hud -->
+    <div id="hud" class="hidden"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

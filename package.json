@@ -1,0 +1,21 @@
+{
+  "name": "last-man-standing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Last Man Standing — a browser-based 3D adventure Proof of Concept built with Three.js + TypeScript + Vite.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "three": "^0.161.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.161.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.0"
+  }
+}
