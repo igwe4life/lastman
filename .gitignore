@@ -1,6 +1,8 @@
 node_modules
 dist
 dist-ssr
+# Stray nested repo / local working copy — not part of the project
+lastman/
 *.local
 .DS_Store
 .vscode/*

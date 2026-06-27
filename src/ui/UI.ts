@@ -205,13 +205,14 @@ export class UI {
     }, 3200);
   }
 
-  private showLevelBanner(lvl: { index: number; total: number; name: string; country: string; subtitle: string }): void {
+  private showLevelBanner(lvl: { index: number; total: number; name: string; country: string; subtitle: string; situation: string }): void {
     this.cityLabel.textContent = `${lvl.name}, ${lvl.country}`;
     this.levelBanner.innerHTML = `
       <div class="level-kicker">Level ${lvl.index + 1} of ${lvl.total}</div>
       <div class="level-name">${lvl.name}</div>
       <div class="level-country">${lvl.country}</div>
-      <div class="level-sub">${lvl.subtitle}</div>`;
+      <div class="level-sub">${lvl.subtitle}</div>
+      <div class="level-situation">${lvl.situation}</div>`;
     this.levelBanner.classList.remove('hidden');
     this.levelBanner.classList.add('show');
     window.setTimeout(() => {

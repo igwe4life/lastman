@@ -26,15 +26,22 @@ export class ShopUI {
     bus.on('shopToggle', (open) => this.setOpen(open));
     bus.on('tokensChanged', () => this.refresh());
     bus.on('inventoryChanged', () => this.refresh());
+    bus.on('levelChanged', (lvl) => {
+      const title = this.overlay.querySelector('#shop-title');
+      const brief = this.overlay.querySelector('#shop-brief');
+      if (title) title.textContent = `${lvl.name}, ${lvl.country} — Mission Briefing`;
+      if (brief) brief.textContent = lvl.situation;
+    });
   }
 
   private build(): void {
     this.overlay.innerHTML = `
       <div class="shop-window">
         <div class="shop-head">
-          <h2>Mission Supply Shop</h2>
+          <h2 id="shop-title">Mission Supply Shop</h2>
           <div class="shop-balance">Balance: <span class="token-icon">🪙</span><span id="shop-balance">200</span></div>
         </div>
+        <p class="shop-brief" id="shop-brief"></p>
         <p class="shop-tagline">Spend your Mission Tokens wisely — you cannot help everyone, so choose what to carry into the city.</p>
         <div class="shop-list" id="shop-list"></div>
         <button class="primary-button" id="shop-close">Enter the City →</button>

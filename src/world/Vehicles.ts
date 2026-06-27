@@ -5,6 +5,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   Object3D,
+  Vector3,
 } from 'three';
 import { makeRng, randRange } from '../utils/math';
 import type { CityConfig } from '../config/cities';
@@ -73,11 +74,31 @@ export class Vehicles {
     return g;
   }
 
-  update(dt: number): void {
+  update(dt: number, blockers: Vector3[] = []): void {
     for (const v of this.vehicles) {
+      if (!this.pathClear(v, blockers)) continue; // stop for people / cars ahead
       v.group.position.z += v.dir * v.speed * dt;
       if (v.dir > 0 && v.group.position.z > 16) v.group.position.z = -96;
       if (v.dir < 0 && v.group.position.z < -96) v.group.position.z = 16;
     }
+  }
+
+  /** A vehicle stops if a person, the player, or another car is just ahead in its lane. */
+  private pathClear(v: Vehicle, blockers: Vector3[]): boolean {
+    const vz = v.group.position.z;
+    const isAhead = (x: number, z: number, near: number, far: number): boolean => {
+      if (Math.abs(x - v.lane) > 1.8) return false;
+      const rel = (z - vz) * v.dir; // forward distance
+      return rel > near && rel < far;
+    };
+    for (const b of blockers) {
+      if (isAhead(b.x, b.z, 0.5, 6)) return false;
+    }
+    for (const other of this.vehicles) {
+      if (other === v) continue;
+      if (Math.abs(other.lane - v.lane) > 0.5) continue;
+      if (isAhead(other.group.position.x, other.group.position.z, 0.5, 5)) return false;
+    }
+    return true;
   }
 }

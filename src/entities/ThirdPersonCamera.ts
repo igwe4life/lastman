@@ -28,7 +28,9 @@ export class ThirdPersonCamera {
   }
 
   getRight(out: Vector3): Vector3 {
-    return out.set(Math.sin(this.yaw + Math.PI / 2), 0, Math.cos(this.yaw + Math.PI / 2)).normalize();
+    // Camera-right when looking down the forward (yaw) axis. This is the
+    // negation of the naive perpendicular so that D/Right strafes screen-right.
+    return out.set(-Math.cos(this.yaw), 0, Math.sin(this.yaw)).normalize();
   }
 
   update(dt: number, target: Vector3, distanceScale = 1): void {

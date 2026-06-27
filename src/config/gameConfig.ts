@@ -72,7 +72,7 @@ export const GameConfig = {
   },
 
   mission: {
-    objectiveName: 'The Last Man Standing',
+    objectiveName: 'The Last Man',
     finalPosition: new Vector3(0, 0, -96),
   },
 } as const;

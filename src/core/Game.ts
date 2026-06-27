@@ -9,6 +9,7 @@ import { LevelManager } from '../gameplay/LevelManager';
 import { AudioManager } from '../audio/AudioManager';
 import { UI } from '../ui/UI';
 import { ShopUI } from '../ui/ShopUI';
+import { TouchControls } from '../ui/TouchControls';
 import { createBus } from '../gameplay/events';
 
 /**
@@ -50,6 +51,16 @@ export class Game {
     this.ui.onShopClick = () => this.bus.emit('shopToggle', !this.shopOpen);
 
     this.bus.on('shopToggle', (open) => this.onShopToggle(open));
+
+    // Show on-screen controls on touch devices.
+    const isTouch =
+      matchMedia('(pointer: coarse)').matches ||
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0;
+    if (isTouch) {
+      document.body.classList.add('touch');
+      new TouchControls(this.input);
+    }
   }
 
   async init(onProgress: (ratio: number, label: string) => void): Promise<void> {

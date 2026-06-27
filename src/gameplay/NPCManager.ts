@@ -12,6 +12,25 @@ interface Brain {
   kind: BrainKind;
   timer: number;
   settled: boolean;
+  blockedTime?: number;
+}
+
+/** True if (ax,az) is close and in front of a person at (px,pz) facing (fx,fz). */
+function ahead(
+  px: number,
+  pz: number,
+  fx: number,
+  fz: number,
+  ax: number,
+  az: number,
+  radius: number,
+): boolean {
+  const tx = ax - px;
+  const tz = az - pz;
+  const d = Math.hypot(tx, tz);
+  if (d < 0.35) return true; // overlapping
+  if (d > radius) return false;
+  return (tx * fx + tz * fz) / d > 0.2; // within the forward cone
 }
 
 /**
@@ -120,9 +139,25 @@ export class NPCManager {
     brain.timer = randRange(this.rng, 1.5, 4.5);
   }
 
-  update(dt: number, elapsed: number): void {
+  update(dt: number, elapsed: number, playerPos: Vector3): void {
+    // Separation: stop people who would walk into another person or the player.
+    this.resolveBlocking(playerPos);
+
     for (const brain of this.brains) {
       brain.npc.update(dt, elapsed, this.env.heightAt(brain.npc.position.x, brain.npc.position.z));
+
+      // If stuck for a while, give up on this destination and pick another so
+      // two people don't stand frozen against each other forever.
+      if (brain.npc.blocked && brain.npc.state === 'walk') {
+        brain.blockedTime = (brain.blockedTime ?? 0) + dt;
+        if (brain.blockedTime > 1.6 && !brain.settled) {
+          brain.npc.state = 'idle';
+          brain.blockedTime = 0;
+          brain.timer = randRange(this.rng, 0.5, 2);
+        }
+      } else {
+        brain.blockedTime = 0;
+      }
 
       if (brain.settled) continue;
       if (brain.npc.state === 'idle') {
@@ -130,6 +165,36 @@ export class NPCManager {
         if (brain.timer <= 0) this.assignNext(brain);
       }
     }
+  }
+
+  /** Flag NPCs whose path is obstructed by another person or the player. */
+  private resolveBlocking(playerPos: Vector3): void {
+    for (const b of this.brains) b.npc.blocked = false;
+    for (const b of this.brains) {
+      const npc = b.npc;
+      if (npc.state !== 'walk') continue;
+      const px = npc.position.x;
+      const pz = npc.position.z;
+      const fx = Math.sin(npc.group.rotation.y);
+      const fz = Math.cos(npc.group.rotation.y);
+      // The player is a larger obstacle.
+      if (ahead(px, pz, fx, fz, playerPos.x, playerPos.z, 1.1)) {
+        npc.blocked = true;
+        continue;
+      }
+      for (const o of this.brains) {
+        if (o === b) continue;
+        if (ahead(px, pz, fx, fz, o.npc.position.x, o.npc.position.z, 0.85)) {
+          npc.blocked = true;
+          break;
+        }
+      }
+    }
+  }
+
+  /** Positions of every person (used by the traffic system to stop for crowds). */
+  get positions(): Vector3[] {
+    return this.brains.map((b) => b.npc.position);
   }
 
   private assignNext(brain: Brain): void {

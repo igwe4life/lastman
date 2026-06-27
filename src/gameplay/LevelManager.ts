@@ -66,9 +66,12 @@ export class LevelManager {
       index === CITIES.length - 1 ? new FinalScene(this.camera, this.bus) : null;
     this.finalScene?.build(this.engine.scene);
 
-    // Player physics now follow this city's ground; barrier = the world event.
+    // Player physics now follow this city's ground; barrier = the world event
+    // plus the street "walls" (kept on the street/sidewalk, out of buildings).
     this.player.controller.setGround(this.env);
-    this.player.setBarrier((next) => this.event.blocks(next));
+    this.player.setBarrier(
+      (next) => this.event.blocks(next) || Math.abs(next.x) > 9.2 || next.z > 18 || next.z < -103,
+    );
     this.player.controller.position.set(0, 0, 8);
     this.player.controller.facing = Math.PI;
     this.player.camera.yaw = Math.PI;
@@ -83,6 +86,7 @@ export class LevelManager {
       name: this.city.name,
       country: this.city.country,
       subtitle: this.city.subtitle,
+      situation: this.city.situation,
     });
     this.emitObjectives();
     // Open the supply shop at the start of every level.
@@ -192,8 +196,10 @@ export class LevelManager {
   }
 
   update(dt: number, elapsed: number): void {
-    this.env.update(dt, elapsed, this.camera, this.player.position);
-    this.npcs.update(dt, elapsed);
+    this.npcs.update(dt, elapsed, this.player.position);
+    // People + the player are obstacles the traffic must stop for.
+    const blockers = [this.player.position, ...this.npcs.positions];
+    this.env.update(dt, elapsed, this.camera, this.player.position, blockers);
     this.event.update(dt, this.camera, this.player.position);
     this.finalScene?.update(dt, elapsed, this.player);
 

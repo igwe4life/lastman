@@ -42,6 +42,8 @@ export class CityNPC {
   state: NpcState = 'idle';
   need: GospelResource | null = null;
   fulfilled = false;
+  /** Set by the NPCManager when another person/vehicle is in the way. */
+  blocked = false;
 
   private hips: Object3D;
   private torso: Object3D;
@@ -217,7 +219,8 @@ export class CityNPC {
   }
 
   update(dt: number, elapsed: number, groundY = 0): void {
-    // Movement.
+    // Movement. When blocked (someone/something in the way) the person halts
+    // in place rather than walking through them.
     if (this.state === 'walk' && this.target) {
       const dx = this.target.x - this.group.position.x;
       const dz = this.target.z - this.group.position.z;
@@ -226,7 +229,7 @@ export class CityNPC {
         this.state = 'idle';
         this.target = null;
         this.onArrived?.(this);
-      } else {
+      } else if (!this.blocked) {
         const vx = (dx / dist) * this.speed;
         const vz = (dz / dist) * this.speed;
         this.group.position.x += vx * dt;
@@ -237,7 +240,8 @@ export class CityNPC {
     this.group.position.y = groundY;
     this.group.rotation.y = damp(this.group.rotation.y, this.facing, 8, dt);
 
-    this.animate(dt, elapsed);
+    // Stand still (idle pose) while blocked, even though still en route.
+    this.animate(dt, elapsed, this.state === 'walk' && this.blocked ? 'idle' : this.state);
 
     // Icon bob + helped fade.
     if (this.icon) {
@@ -254,8 +258,8 @@ export class CityNPC {
     }
   }
 
-  private animate(dt: number, elapsed: number): void {
-    if (this.state === 'walk') {
+  private animate(dt: number, elapsed: number, as: NpcState = this.state): void {
+    if (as === 'walk') {
       this.phase += dt * 8;
       const s = Math.sin(this.phase);
       this.legL.rotation.x = damp(this.legL.rotation.x, s * 0.6, 16, dt);
@@ -264,21 +268,21 @@ export class CityNPC {
       this.armR.rotation.x = damp(this.armR.rotation.x, s * 0.5, 16, dt);
       this.hips.position.y = 0.85 - Math.abs(Math.cos(this.phase)) * 0.04;
       this.torso.rotation.x = 0.05;
-    } else if (this.state === 'sit') {
+    } else if (as === 'sit') {
       this.hips.position.y = damp(this.hips.position.y, 0.55, 10, dt);
       this.legL.rotation.x = damp(this.legL.rotation.x, -1.4, 10, dt);
       this.legR.rotation.x = damp(this.legR.rotation.x, -1.4, 10, dt);
       this.armL.rotation.x = damp(this.armL.rotation.x, -0.3, 10, dt);
       this.armR.rotation.x = damp(this.armR.rotation.x, -0.3, 10, dt);
       this.torso.rotation.x = damp(this.torso.rotation.x, 0.06, 10, dt);
-    } else if (this.state === 'talk') {
+    } else if (as === 'talk') {
       const g = Math.sin(elapsed * 3 + this.phase) * 0.25;
       this.armR.rotation.x = damp(this.armR.rotation.x, -0.4 + g, 10, dt);
       this.armL.rotation.x = damp(this.armL.rotation.x, 0.05, 10, dt);
       this.legL.rotation.x = damp(this.legL.rotation.x, 0, 10, dt);
       this.legR.rotation.x = damp(this.legR.rotation.x, 0, 10, dt);
       this.hips.position.y = damp(this.hips.position.y, 0.85, 10, dt);
-    } else if (this.state === 'helped') {
+    } else if (as === 'helped') {
       // Hands raised in gratitude.
       this.armL.rotation.x = damp(this.armL.rotation.x, -2.2, 10, dt);
       this.armR.rotation.x = damp(this.armR.rotation.x, -2.2, 10, dt);

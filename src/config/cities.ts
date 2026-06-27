@@ -16,6 +16,8 @@ export interface CityConfig {
   name: string;
   country: string;
   subtitle: string;
+  /** What's happening in this district and what the player must do. */
+  situation: string;
 
   /** Atmospheric sky. elevation/azimuth in degrees. */
   sky: { elevation: number; azimuth: number; turbidity: number; rayleigh: number };
@@ -54,6 +56,8 @@ const lagos: CityConfig = {
   name: 'Lagos',
   country: 'Nigeria',
   subtitle: 'Bright, busy and full of life on the Atlantic coast.',
+  situation:
+    'A protest has barricaded the road out of the district. Win the people over — hand out Bibles, magazines and books, and pray with those who ask. When enough hearts are reached, the road will be cleared.',
   sky: { elevation: 55, azimuth: 150, turbidity: 8, rayleigh: 1.4 },
   fog: { color: 0xd9e4d0, near: 70, far: 360 },
   exposure: 1.15,
@@ -78,6 +82,8 @@ const accra: CityConfig = {
   name: 'Accra',
   country: 'Ghana',
   subtitle: 'Warm evening light over wide, modern boulevards.',
+  situation:
+    'A frightened community has locked its gate. Serve the people on the streets and reassure them with the Good News. As their confidence grows, the community gate will open.',
   sky: { elevation: 14, azimuth: 250, turbidity: 6, rayleigh: 2.6 },
   fog: { color: 0xf0cfa0, near: 80, far: 380 },
   exposure: 1.1,
@@ -102,6 +108,8 @@ const johannesburg: CityConfig = {
   name: 'Johannesburg',
   country: 'South Africa',
   subtitle: 'A modern skyline against the high-veld horizon.',
+  situation:
+    'Storms have damaged the crossing to the final district. Bring hope to the people of the city — once your mission here is complete, the crossing will be restored and the way to The Last Man will open.',
   sky: { elevation: 38, azimuth: 120, turbidity: 4, rayleigh: 2.0 },
   fog: { color: 0xcdd9e6, near: 90, far: 460 },
   exposure: 1.0,

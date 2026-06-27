@@ -38,7 +38,7 @@ export type GameEvents = {
   purchase: { type: GospelResource; price: number };
   // Mission / level
   objectivesChanged: ObjectiveProgress[];
-  levelChanged: { index: number; total: number; name: string; country: string; subtitle: string };
+  levelChanged: { index: number; total: number; name: string; country: string; subtitle: string; situation: string };
   worldEventBanner: string;
   missionComplete: void;
   // NPC interaction

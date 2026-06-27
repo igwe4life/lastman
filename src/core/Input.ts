@@ -98,12 +98,43 @@ export class Input {
     if (this.isDown('KeyS') || this.isDown('ArrowDown')) y -= 1;
     if (this.isDown('KeyD') || this.isDown('ArrowRight')) x += 1;
     if (this.isDown('KeyA') || this.isDown('ArrowLeft')) x -= 1;
-    const len = Math.hypot(x, y) || 1;
-    return { x: x / len, y: y / len };
+    // Merge the on-screen joystick (analog) with the keyboard.
+    x += this.touchMove.x;
+    y += this.touchMove.y;
+    const len = Math.hypot(x, y);
+    if (len > 1) {
+      x /= len;
+      y /= len;
+    }
+    return { x, y };
   }
 
   get running(): boolean {
-    return this.isDown('ShiftLeft') || this.isDown('ShiftRight');
+    return this.isDown('ShiftLeft') || this.isDown('ShiftRight') || this.touchRun;
+  }
+
+  // --- Touch / virtual input (driven by the on-screen controls) ----------
+  private touchMove = { x: 0, y: 0 };
+  private touchRun = false;
+
+  setTouchMove(x: number, y: number): void {
+    this.touchMove.x = x;
+    this.touchMove.y = y;
+  }
+
+  setTouchRun(on: boolean): void {
+    this.touchRun = on;
+  }
+
+  /** Add camera-look delta from a touch drag (already in radians). */
+  addLook(dx: number, dy: number): void {
+    this.lookDeltaX += dx;
+    this.lookDeltaY += dy;
+  }
+
+  /** Fire an edge-triggered key press from a virtual button (E, B, Space…). */
+  pressVirtual(code: string): void {
+    this.pressedThisFrame.add(code);
   }
 
   /** Consume per-frame look deltas (returns and resets). */

@@ -84,12 +84,18 @@ export class Environment {
     return this.props.visitSpots;
   }
 
-  update(dt: number, elapsed: number, camera: PerspectiveCamera, playerPos: Vector3): void {
+  update(
+    dt: number,
+    elapsed: number,
+    camera: PerspectiveCamera,
+    playerPos: Vector3,
+    blockers: Vector3[] = [],
+  ): void {
     this.grass.update(elapsed);
     this.trees.update(elapsed);
     this.clouds.update(dt, camera.quaternion);
     this.birds.update(dt, elapsed, playerPos.z);
-    this.vehicles.update(dt);
+    this.vehicles.update(dt, blockers);
     this.lighting.follow(playerPos, this.sky.sunDirection);
   }
 
