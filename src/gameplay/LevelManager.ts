@@ -224,7 +224,9 @@ export class LevelManager {
   /** Where the HUD compass should point. */
   objectivePosition(): Vector3 {
     if (this.event.isOpen) return this.event.portalPosition;
-    return new Vector3(0, 0, -45); // toward the heart of the district / crowd
+    // Guide the player to the next person who still needs help.
+    const needy = this.npcs.nearestNeedyPos(this.player.position);
+    return needy ?? new Vector3(0, 0, -45);
   }
 
   private updatePrompt(): void {

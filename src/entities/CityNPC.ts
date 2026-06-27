@@ -243,18 +243,22 @@ export class CityNPC {
     // Stand still (idle pose) while blocked, even though still en route.
     this.animate(dt, elapsed, this.state === 'walk' && this.blocked ? 'idle' : this.state);
 
-    // Icon bob + helped fade.
-    if (this.icon) {
-      this.icon.position.y = GameConfig.npc.iconHeight + Math.sin(elapsed * 2 + this.iconBob) * 0.08;
-      if (this.state === 'helped') {
-        this.reactTime += dt;
-        this.icon.position.y += this.reactTime * 0.6;
+    // Gratitude beat, then return to ordinary life so the helped person doesn't
+    // stand frozen (e.g. in the middle of a crossing, holding up traffic).
+    if (this.state === 'helped') {
+      this.reactTime += dt;
+      if (this.icon) {
+        this.icon.position.y =
+          GameConfig.npc.iconHeight + Math.sin(elapsed * 2 + this.iconBob) * 0.08 + this.reactTime * 0.6;
         this.icon.material.opacity = Math.max(0, 1 - this.reactTime * 0.5);
-        if (this.reactTime > 2 && this.icon) {
+        if (this.reactTime > 1.8) {
           this.group.remove(this.icon);
           this.icon = null;
         }
       }
+      if (this.reactTime > 1.8) this.state = 'idle';
+    } else if (this.icon) {
+      this.icon.position.y = GameConfig.npc.iconHeight + Math.sin(elapsed * 2 + this.iconBob) * 0.08;
     }
   }
 

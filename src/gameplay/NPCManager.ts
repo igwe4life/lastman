@@ -17,6 +17,7 @@ interface Brain {
   blockedTime?: number;
   crossPhase?: 'toCrossing' | 'crossing' | null;
   crossZ?: number;
+  retired?: boolean; // helped and returned to ordinary life
 }
 
 /** True if (ax,az) is close and in front of a person at (px,pz) facing (fx,fz). */
@@ -108,7 +109,9 @@ export class NPCManager {
     const obj = this.city.objectives as ResourceRequirement;
     const list: GospelResource[] = [];
     (Object.entries(obj) as [GospelResource, number][]).forEach(([type, n]) => {
-      const surplus = 1; // a little extra so the player must prioritise
+      // Extra people beyond the objective so the player has choices AND a safety
+      // margin (a few can wander off and the level is still completable).
+      const surplus = 2;
       for (let k = 0; k < n + surplus; k++) list.push(type);
     });
     // Shuffle so needs aren't clustered by type.
@@ -170,6 +173,15 @@ export class NPCManager {
     for (const brain of this.brains) {
       brain.npc.update(dt, elapsed, this.env.heightAt(brain.npc.position.x, brain.npc.position.z));
 
+      // Once helped, a person rejoins ordinary life — walk back to a sidewalk
+      // and wander, so they never stay parked in the road blocking traffic.
+      if (brain.npc.fulfilled && !brain.retired) {
+        brain.retired = true;
+        brain.kind = 'wander';
+        brain.settled = false;
+        brain.crossPhase = null;
+      }
+
       // If stuck for a while, give up on this destination and pick another so
       // two people don't stand frozen against each other forever.
       if (brain.npc.blocked && brain.npc.state === 'walk') {
@@ -223,8 +235,10 @@ export class NPCManager {
 
   private assignNext(brain: Brain): void {
     if (brain.kind === 'wander') {
-      // Sometimes cross the road — but only at a zebra crossing.
-      if (this.rng() < 0.25 && CROSSINGS.length) {
+      // Sometimes cross the road — but only at a zebra crossing, and never while
+      // still carrying a need (so people needing help stay easy to reach on the
+      // sidewalk and never get helped mid-road).
+      if (this.rng() < 0.25 && CROSSINGS.length && !brain.npc.need) {
         const crossZ = CROSSINGS[(this.rng() * CROSSINGS.length) | 0];
         brain.crossPhase = 'toCrossing';
         brain.crossZ = crossZ;
@@ -245,6 +259,22 @@ export class NPCManager {
       // 'stand' — small idle shuffle so they don't look frozen.
       brain.timer = randRange(this.rng, 3, 6);
     }
+  }
+
+  /** Position of the closest person still needing help, at any distance (for the compass). */
+  nearestNeedyPos(playerPos: Vector3): Vector3 | null {
+    let best: CityNPC | null = null;
+    let bestD = Infinity;
+    for (const brain of this.brains) {
+      const npc = brain.npc;
+      if (!npc.need || npc.fulfilled) continue;
+      const d = npc.distanceTo(playerPos);
+      if (d < bestD) {
+        bestD = d;
+        best = npc;
+      }
+    }
+    return best ? best.position : null;
   }
 
   /** Closest unhelped, needy NPC within range (for the interaction prompt). */
