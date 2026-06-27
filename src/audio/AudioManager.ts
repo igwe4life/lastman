@@ -160,6 +160,10 @@ export class AudioManager {
       case 'levelup':
         this.arpeggio([523, 659, 784, 1046, 1318], 0.1);
         break;
+      case 'celebrate':
+        // Triumphant trumpet-like fanfare for the angelic finale.
+        this.fanfare();
+        break;
       case 'chime':
         this.blip(1320, 0.4, 'sine', 0.1, 2);
         break;
@@ -217,6 +221,38 @@ export class AudioManager {
     freqs.forEach((f, i) => {
       window.setTimeout(() => this.blip(f, 0.18, 'sine', 0.12), i * step * 1000);
     });
+  }
+
+  /** A bright brass note (two detuned sawtooths) for the fanfare. */
+  private brassNote(freq: number, start: number, dur: number, vol: number): void {
+    if (!this.ctx || !this.master) return;
+    const t = this.ctx.currentTime + start;
+    for (const detune of [-4, 4]) {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      osc.detune.value = detune;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.04);
+      g.gain.setValueAtTime(vol, t + dur * 0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(g).connect(this.master);
+      osc.start(t);
+      osc.stop(t + dur + 0.05);
+    }
+  }
+
+  /** Triumphant fanfare + sustained major chord for the angelic finale. */
+  private fanfare(): void {
+    const v = 0.07;
+    // Rising call: G4 C5 E5 G5.
+    this.brassNote(392, 0.0, 0.22, v);
+    this.brassNote(523, 0.22, 0.22, v);
+    this.brassNote(659, 0.44, 0.22, v);
+    this.brassNote(784, 0.66, 0.5, v);
+    // Sustained C-major chord to bloom under the celebration.
+    [523, 659, 784, 1046].forEach((f) => this.brassNote(f, 1.2, 2.2, v * 0.6));
   }
 
   private thud(vol: number): void {

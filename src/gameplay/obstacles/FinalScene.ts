@@ -8,6 +8,7 @@ import {
   type PerspectiveCamera,
 } from 'three';
 import { NPC } from '../../entities/NPC';
+import { Angels } from '../../world/Angels';
 import type { Player } from '../../entities/Player';
 import type { GameBus } from '../events';
 import { GameConfig } from '../../config/gameConfig';
@@ -26,9 +27,11 @@ export class FinalScene {
   private lastMan!: NPC;
   private marker!: Mesh;
   private markerLight!: PointLight;
+  private angels!: Angels;
 
   private active = false;
   private done = false;
+  private angelsStarted = false;
   private t = 0;
   private startPos = new Vector3();
   private greetSpot = new Vector3();
@@ -54,6 +57,9 @@ export class FinalScene {
     this.markerLight = new PointLight(0xffe9b0, 8, 30, 2);
     this.markerLight.position.copy(this.position).add(new Vector3(0, 4, 0));
     scene.add(this.markerLight);
+
+    // The angelic host (hidden until the celebration beat).
+    this.angels = new Angels(scene, this.position.clone());
   }
 
   get isActive(): boolean {
@@ -82,6 +88,7 @@ export class FinalScene {
     this.marker.rotation.y += dt * 0.4;
     this.markerLight.intensity = 7 + Math.sin(elapsed * 3) * 1.5;
     this.lastMan.update(dt, elapsed);
+    this.angels.update(dt, elapsed);
 
     if (!this.active) return;
     this.t += dt;
@@ -96,23 +103,31 @@ export class FinalScene {
       player.rig.root.rotation.y = Math.PI;
       player.rig.root.position.copy(player.controller.position);
       player.rig.update(dt);
-      this.cinematicCamera(dt, player, 0);
+      this.cinematicCamera(dt, player, 0, 1.4);
     }
-    // Phase 2 (3–6s): warm greeting.
-    else if (this.t < 6) {
+    // Phase 2 (3–5.5s): warm greeting.
+    else if (this.t < 5.5) {
       player.rig.setState('interact', 0);
       player.rig.root.rotation.y = Math.PI;
       player.rig.update(dt);
       this.lastMan.faceToward(player.position);
-      this.cinematicCamera(dt, player, 1);
+      this.cinematicCamera(dt, player, 1, 1.4);
       if (this.t > 4 && this.t < 4.1) this.bus.emit('toast', 'Every person matters.');
     }
-    // Phase 3 (6–8s): hold, then complete.
+    // Phase 3 (5.5–11s): the heavens celebrate — camera cranes back and up to
+    // reveal a host of angels with trumpets and song, then complete.
     else {
       player.rig.setState('idle', 0);
       player.rig.update(dt);
-      this.cinematicCamera(dt, player, 2);
-      if (!this.done && this.t > 7) {
+      if (!this.angelsStarted) {
+        this.angelsStarted = true;
+        this.angels.start();
+        this.bus.emit('sfx', 'celebrate');
+      }
+      // Raise the look target into the sky to bring the angels into frame.
+      const reveal = smoothstep(5.5, 9, this.t);
+      this.cinematicCamera(dt, player, 2, 1.4 + reveal * 7);
+      if (!this.done && this.t > 10.5) {
         this.done = true;
         this.active = false;
         this.bus.emit('missionComplete', undefined);
@@ -120,24 +135,23 @@ export class FinalScene {
     }
   }
 
-  /** Three framing stages for the ending camera. */
-  private cinematicCamera(dt: number, player: Player, stage: number): void {
+  /** Framing stages for the ending camera; `lookY` lifts the gaze toward the sky. */
+  private cinematicCamera(dt: number, player: Player, stage: number, lookY: number): void {
     const mid = player.position.clone().lerp(this.position, 0.5);
-    mid.y += 1.4;
+    const look = mid.clone();
+    look.y += lookY;
     let camPos: Vector3;
     if (stage === 0) {
-      // Tracking side dolly.
-      camPos = mid.clone().add(new Vector3(4.5, 1.8, 3.5));
+      camPos = mid.clone().add(new Vector3(4.5, 3.2, 3.5)); // tracking side dolly
     } else if (stage === 1) {
-      // Over-the-shoulder two-shot.
-      camPos = mid.clone().add(new Vector3(3.2, 1.4, 2.2));
+      camPos = mid.clone().add(new Vector3(3.2, 2.8, 2.2)); // over-the-shoulder two-shot
     } else {
-      // Slow push-in / rise.
-      camPos = mid.clone().add(new Vector3(0, 2.6, 5));
+      camPos = mid.clone().add(new Vector3(0, 6.5, 14)); // crane back + up for the reveal
     }
-    this.camera.position.x = damp(this.camera.position.x, camPos.x, 3, dt);
-    this.camera.position.y = damp(this.camera.position.y, camPos.y, 3, dt);
-    this.camera.position.z = damp(this.camera.position.z, camPos.z, 3, dt);
-    this.camera.lookAt(mid);
+    const lambda = stage === 2 ? 1.6 : 3;
+    this.camera.position.x = damp(this.camera.position.x, camPos.x, lambda, dt);
+    this.camera.position.y = damp(this.camera.position.y, camPos.y, lambda, dt);
+    this.camera.position.z = damp(this.camera.position.z, camPos.z, lambda, dt);
+    this.camera.lookAt(look);
   }
 }

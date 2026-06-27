@@ -5,6 +5,7 @@ import type { CityConfig } from '../config/cities';
 import type { GospelResource } from '../config/gameConfig';
 import type { ResourceRequirement } from './Inventory';
 import { makeRng, randRange } from '../utils/math';
+import { STREET, CROSSINGS } from '../config/layout';
 
 type BrainKind = 'wander' | 'shop' | 'sit' | 'talk' | 'stand';
 interface Brain {
@@ -12,7 +13,10 @@ interface Brain {
   kind: BrainKind;
   timer: number;
   settled: boolean;
+  side: number; // which sidewalk (-1 / +1) this person is on
   blockedTime?: number;
+  crossPhase?: 'toCrossing' | 'crossing' | null;
+  crossZ?: number;
 }
 
 /** True if (ax,az) is close and in front of a person at (px,pz) facing (fx,fz). */
@@ -63,7 +67,9 @@ export class NPCManager {
     let benchIdx = 0;
 
     for (let i = 0; i < total; i++) {
-      const spawn = new Vector3(randRange(this.rng, -6.5, 6.5), 0, randRange(this.rng, 8, -86));
+      // Everyone spawns and lives on a sidewalk, never the open road.
+      const side = this.rng() < 0.5 ? -1 : 1;
+      const spawn = new Vector3(this.sidewalkX(side), 0, randRange(this.rng, STREET.start - 2, STREET.end + 4));
       const npc = new CityNPC(spawn, (i + 1) * 131 + this.city.id.length);
       const need = needs[i] ?? null;
       npc.setNeed(need);
@@ -79,7 +85,7 @@ export class NPCManager {
         kind = r < 0.3 ? 'sit' : r < 0.55 ? 'shop' : r < 0.8 ? 'wander' : 'talk';
       }
 
-      const brain: Brain = { npc, kind, timer: randRange(this.rng, 0, 3), settled: false };
+      const brain: Brain = { npc, kind, timer: randRange(this.rng, 0, 3), settled: false, side };
       npc.onArrived = () => this.onArrived(brain);
       this.brains.push(brain);
 
@@ -113,14 +119,22 @@ export class NPCManager {
     return list;
   }
 
+  /** Pedestrian lane x for a given side (on the sidewalk, with a little jitter). */
+  private sidewalkX(side: number): number {
+    return side * (STREET.sidewalkX + randRange(this.rng, 0, STREET.sidewalkOuter - STREET.sidewalkX - 1.5));
+  }
+
   private pairTalkers(): void {
     const talkers = this.brains.filter((b) => b.kind === 'talk');
     for (let i = 0; i + 1 < talkers.length; i += 2) {
       const a = talkers[i].npc;
       const b = talkers[i + 1].npc;
-      const mid = a.position.clone().add(b.position).multiplyScalar(0.5);
-      a.group.position.set(mid.x - 0.6, 0, mid.z);
-      b.group.position.set(mid.x + 0.6, 0, mid.z);
+      // Gather the pair onto a sidewalk and face each other.
+      const side = talkers[i].side;
+      const z = a.position.z;
+      const baseX = this.sidewalkX(side);
+      a.group.position.set(baseX - side * 0.4, 0, z);
+      b.group.position.set(baseX + side * 0.4, 0, z + 0.7);
       a.startTalk(Math.atan2(b.position.x - a.position.x, b.position.z - a.position.z));
       b.startTalk(Math.atan2(a.position.x - b.position.x, a.position.z - b.position.z));
       talkers[i].settled = talkers[i + 1].settled = true;
@@ -134,6 +148,16 @@ export class NPCManager {
       brain.npc.sitDown();
       brain.settled = true;
       return;
+    }
+    // Two-step zebra crossing: walk to the crossing on this side, then across.
+    if (brain.crossPhase === 'toCrossing') {
+      brain.side = -brain.side;
+      brain.crossPhase = 'crossing';
+      brain.npc.walkTo(new Vector3(this.sidewalkX(brain.side), 0, brain.crossZ ?? brain.npc.position.z));
+      return;
+    }
+    if (brain.crossPhase === 'crossing') {
+      brain.crossPhase = null;
     }
     // Otherwise pause a moment before choosing a new destination.
     brain.timer = randRange(this.rng, 1.5, 4.5);
@@ -199,11 +223,24 @@ export class NPCManager {
 
   private assignNext(brain: Brain): void {
     if (brain.kind === 'wander') {
-      brain.npc.walkTo(new Vector3(randRange(this.rng, -6.5, 6.5), 0, randRange(this.rng, 8, -86)));
+      // Sometimes cross the road — but only at a zebra crossing.
+      if (this.rng() < 0.25 && CROSSINGS.length) {
+        const crossZ = CROSSINGS[(this.rng() * CROSSINGS.length) | 0];
+        brain.crossPhase = 'toCrossing';
+        brain.crossZ = crossZ;
+        brain.npc.walkTo(new Vector3(this.sidewalkX(brain.side), 0, crossZ));
+      } else {
+        // Stroll along the current sidewalk.
+        brain.crossPhase = null;
+        brain.npc.walkTo(
+          new Vector3(this.sidewalkX(brain.side), 0, randRange(this.rng, STREET.start - 2, STREET.end + 4)),
+        );
+      }
     } else if (brain.kind === 'shop') {
       const spots = this.env.visitSpots;
+      brain.crossPhase = null;
       if (spots.length) brain.npc.walkTo(spots[(this.rng() * spots.length) | 0]);
-      else brain.npc.walkTo(new Vector3(randRange(this.rng, -6, 6), 0, randRange(this.rng, 8, -86)));
+      else brain.npc.walkTo(new Vector3(this.sidewalkX(brain.side), 0, randRange(this.rng, STREET.start - 2, STREET.end + 4)));
     } else {
       // 'stand' — small idle shuffle so they don't look frozen.
       brain.timer = randRange(this.rng, 3, 6);

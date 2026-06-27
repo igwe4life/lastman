@@ -7,44 +7,94 @@ import {
   PlaneGeometry,
   RepeatWrapping,
 } from 'three';
+import { CROSSINGS, SIDE_ROADS, STREET } from '../config/layout';
 
 /**
- * The main city street the player walks down, with raised sidewalks on each
- * side and painted lane + crossing markings. Runs the length of the district
- * along -Z. The street is wide (a plaza-like boulevard) so crowds feel alive.
+ * The main boulevard plus raised sidewalks, lane markings, zebra crossings and
+ * perpendicular side roads. Geometry matches src/config/layout.ts so pedestrians
+ * walk the sidewalks and only cross at the painted crossings.
  */
 export class Roads {
   constructor(parent: Object3D) {
-    // Asphalt street.
-    const streetGeo = new PlaneGeometry(16, 130, 1, 1);
+    const asphalt = this.asphalt();
+    const dashMat = new MeshStandardMaterial({ color: 0xe8e2c0, roughness: 0.8, emissive: 0x161410 });
+    const walkMat = new MeshStandardMaterial({ color: 0x9a9488, roughness: 0.95 });
+
+    const length = STREET.start - STREET.end;
+    const midZ = (STREET.start + STREET.end) / 2;
+
+    // Main asphalt street.
+    const streetGeo = new PlaneGeometry(STREET.roadHalfWidth * 2 + 8, length + 8, 1, 1);
     streetGeo.rotateX(-Math.PI / 2);
-    streetGeo.translate(0, 0.02, -45);
-    const street = new Mesh(streetGeo, new MeshStandardMaterial({ map: this.asphalt(), roughness: 0.95 }));
+    streetGeo.translate(0, 0.02, midZ);
+    const street = new Mesh(streetGeo, new MeshStandardMaterial({ map: asphalt, roughness: 0.95 }));
     street.receiveShadow = true;
     parent.add(street);
 
     // Centre lane dashes.
-    const dashMat = new MeshStandardMaterial({ color: 0xe8e2c0, roughness: 0.8, emissive: 0x222018 });
-    for (let z = 10; z > -100; z -= 5) {
+    for (let z = STREET.start; z > STREET.end; z -= 5) {
       const dash = new Mesh(new BoxGeometry(0.3, 0.02, 2), dashMat);
       dash.position.set(0, 0.06, z);
       parent.add(dash);
     }
 
-    // Crosswalk stripes near the plaza.
-    for (let i = -3; i <= 3; i++) {
-      const stripe = new Mesh(new BoxGeometry(1, 0.02, 4), dashMat);
-      stripe.position.set(i * 1.4, 0.06, -30);
-      parent.add(stripe);
-    }
+    // Raised sidewalks (split around side-road intersections).
+    this.buildSidewalks(parent, walkMat, midZ, length);
 
-    // Raised sidewalks.
-    const walkMat = new MeshStandardMaterial({ color: 0x9a9488, roughness: 0.95 });
+    // Zebra crossings across the main road.
+    for (const z of CROSSINGS) this.zebra(parent, dashMat, z, 'across');
+
+    // Side roads (perpendicular cross-streets) with their own crossings.
+    for (const z of SIDE_ROADS) {
+      const sideGeo = new PlaneGeometry(90, 8, 1, 1);
+      sideGeo.rotateX(-Math.PI / 2);
+      sideGeo.translate(0, 0.03, z);
+      const side = new Mesh(sideGeo, new MeshStandardMaterial({ map: this.asphalt(), roughness: 0.95 }));
+      side.receiveShadow = true;
+      parent.add(side);
+      // Lane dashes along the side road.
+      for (let x = -40; x < 40; x += 5) {
+        const dash = new Mesh(new BoxGeometry(2, 0.02, 0.3), dashMat);
+        dash.position.set(x, 0.07, z);
+        parent.add(dash);
+      }
+    }
+  }
+
+  private buildSidewalks(parent: Object3D, mat: MeshStandardMaterial, midZ: number, length: number): void {
+    const width = STREET.sidewalkOuter - STREET.sidewalkX;
+    const cx = (STREET.sidewalkX + STREET.sidewalkOuter) / 2;
+    // Build each sidewalk as segments so side roads break through.
+    const breaks = SIDE_ROADS.map((z) => [z - 5, z + 5] as [number, number]);
+    const segments: [number, number][] = [];
+    let cursor = STREET.start + 4;
+    const sorted = [...breaks].sort((a, b) => b[0] - a[0]);
+    for (const [bStart, bEnd] of sorted) {
+      segments.push([cursor, bStart]);
+      cursor = bEnd;
+    }
+    segments.push([cursor, STREET.end - 4]);
+
     for (const side of [-1, 1]) {
-      const walk = new Mesh(new BoxGeometry(6, 0.25, 130), walkMat);
-      walk.position.set(side * 11, 0.12, -45);
-      walk.receiveShadow = true;
-      parent.add(walk);
+      for (const [zHi, zLo] of segments) {
+        const segLen = zHi - zLo;
+        if (segLen <= 0) continue;
+        const walk = new Mesh(new BoxGeometry(width, 0.25, segLen), mat);
+        walk.position.set(side * cx, 0.12, (zHi + zLo) / 2);
+        walk.receiveShadow = true;
+        parent.add(walk);
+      }
+    }
+    void midZ;
+    void length;
+  }
+
+  /** Paint a zebra crossing. 'across' = stripes spanning the road in x. */
+  private zebra(parent: Object3D, mat: MeshStandardMaterial, z: number, _dir: 'across'): void {
+    for (let i = -3; i <= 3; i++) {
+      const stripe = new Mesh(new BoxGeometry(0.55, 0.02, 4.4), mat);
+      stripe.position.set(i * 0.85, 0.06, z);
+      parent.add(stripe);
     }
   }
 

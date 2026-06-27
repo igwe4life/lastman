@@ -14,6 +14,7 @@ export type SfxName =
   | 'footstep-run'
   | 'event'
   | 'levelup'
+  | 'celebrate'
   | 'chime';
 
 export interface ObjectiveProgress {

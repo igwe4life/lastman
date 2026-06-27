@@ -157,7 +157,14 @@ export class LevelManager {
     const done = RESOURCE_TYPES.every((t) => this.have[t] >= (obj[t] ?? 0));
     if (done) {
       this.completed = true;
+      // Whisk the player to the end of the district to witness the world event
+      // (the bridge / gate / crossing) opening up close.
       this.player.freeze(true);
+      this.player.controller.position.set(0, 0, -84);
+      this.player.controller.velocity.set(0, 0, 0);
+      this.player.controller.facing = Math.PI;
+      this.player.camera.yaw = Math.PI;
+      this.player.camera.pitch = 0.12;
       this.event.trigger();
       this.bus.emit('worldEventBanner', this.event.bannerText);
       this.bus.emit('sfx', 'event');
