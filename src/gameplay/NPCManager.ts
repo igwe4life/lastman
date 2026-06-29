@@ -261,6 +261,13 @@ export class NPCManager {
     }
   }
 
+  /** How many people in the city still need help. */
+  remainingNeedy(): number {
+    let n = 0;
+    for (const b of this.brains) if (b.npc.need && !b.npc.fulfilled) n++;
+    return n;
+  }
+
   /** Position of the closest person still needing help, at any distance (for the compass). */
   nearestNeedyPos(playerPos: Vector3): Vector3 | null {
     let best: CityNPC | null = null;

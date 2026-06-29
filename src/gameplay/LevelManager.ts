@@ -89,6 +89,7 @@ export class LevelManager {
       situation: this.city.situation,
     });
     this.emitObjectives();
+    this.bus.emit('peopleRemaining', this.npcs.remainingNeedy());
     // Open the supply shop at the start of every level.
     this.bus.emit('shopToggle', true);
   }
@@ -137,6 +138,7 @@ export class LevelManager {
       });
       this.bus.emit('toast', `${ResourceLabels[need]} given · +1 objective`);
       this.emitObjectives();
+      this.bus.emit('peopleRemaining', this.npcs.remainingNeedy());
       window.setTimeout(() => this.bus.emit('npcPanel', null), 2200);
       this.checkCompletion();
     } else {

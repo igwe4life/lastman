@@ -39,6 +39,7 @@ export type GameEvents = {
   purchase: { type: GospelResource; price: number };
   // Mission / level
   objectivesChanged: ObjectiveProgress[];
+  peopleRemaining: number;
   levelChanged: { index: number; total: number; name: string; country: string; subtitle: string; situation: string };
   worldEventBanner: string;
   missionComplete: void;

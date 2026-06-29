@@ -1,0 +1,70 @@
+# =====================================================================
+# 301 REDIRECT MAP - safetynigeria.com  (PrestaShop 1.7 -> 8.6 migration)
+# Generated 2026-06-28 for the 21 hard-404 URLs that lose ranking otherwise.
+# PLACE THESE LINES INSIDE <IfModule mod_rewrite.c> ... RewriteEngine On
+# ABOVE the PrestaShop block (above the line '# ~~start~~ ...').
+# All targets verified to return HTTP 200 on staging on 2026-06-28.
+# =====================================================================
+
+# closest-category, match confidence 0.25
+RewriteRule ^116\-country\-flags\-suppliers$ /281-traffic-control-flags-suppliers [R=301,L,NE]
+
+# closest-category, match confidence 0.67
+RewriteRule ^325\-protective\-sleeves\-suppliers$ /711-arm-protective-sleeves-suppliers [R=301,L,NE]
+
+# closest-category, match confidence 0.5
+RewriteRule ^581\-lab\-furniture\-equipment$ /593-lab-equipment-suppliers [R=301,L,NE]
+
+# closest-category, match confidence 0.5
+RewriteRule ^582\-lab\-instruments\-equipment$ /593-lab-equipment-suppliers [R=301,L,NE]
+
+# closest-category, match confidence 0.5
+RewriteRule ^592\-lab\-utensils\-equipment$ /593-lab-equipment-suppliers [R=301,L,NE]
+
+# closest-category, match confidence 1.0
+RewriteRule ^707\-ratchet\-straps\-suppliers$ /705-ratchet-straps-suppliers [R=301,L,NE]
+
+# closest-category, match confidence 0.67
+RewriteRule ^708\-vehicle\-recovery\-suppliers$ /709-vehicle-recovery-rope [R=301,L,NE]
+
+# closest-category, match confidence 0.2
+RewriteRule ^727\-pavement\-quality\-testing\-instruments$ /713-test-instruments-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^adhesive\-primers\-activators\-accelerators\-removers/959\-abro\-11\-lacquer\-thinner\-lq\-11\-usgl\.html$ /512-adhesive-primers-activators-accelerators-removers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^adhesive\-remover\-cleaning\-chemical/703\-seaclean\-2\-and\-ultra\-fx\-solution\.html$ /457-adhesive-remover-cleaning-chemical [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^cleaning\-chemicals\-suppliers\-in\-nigeria/724\-carbon\-remover\-25\-ltr\.html$ /68-cleaning-chemicals-suppliers-in-nigeria [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-foot\-boots\-shoes\-suppliers/1364\-safety\-jogger\-x2020p\-eh\-safety\-boot\.html$ /57-safety-foot-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/1584\-safety\-jogger\-morris\-s1p\-boot\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/1586\-safety\-jogger\-cador\-s1p\-boot\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/1587\-safety\-jogger\-ligero\-s1p\-boot\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/1589\-safety\-jogger\-desert\-boot\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/1590\-safety\-jogger\-x2000\-s3\-boot\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/187\-safety\-jogger\-x2020p31\-s3\-src\-boot\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/253\-safety\-jogger\-aura\-s3\-esd\-src\-metal\-free\-boot\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^safety\-work\-boots\-shoes\-suppliers/532\-safety\-jogger\-climber\-s3\.html$ /308-safety-work-boots-shoes-suppliers [R=301,L,NE]
+
+# parent-category, match confidence 1.0
+RewriteRule ^wipers\-cleaner\-suppliers/8\-n\-swipes\-industrial\-wipers\.html$ /73-wipers-cleaner-suppliers [R=301,L,NE]

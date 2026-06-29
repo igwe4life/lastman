@@ -16,6 +16,7 @@ export class UI {
   private tokenEl!: HTMLElement;
   private satchel: Record<GospelResource, HTMLElement> = {} as never;
   private objectivesEl!: HTMLElement;
+  private peopleRemainingEl!: HTMLElement;
   private prompt!: HTMLElement;
   private npcPanel!: HTMLElement;
   private toastBox!: HTMLElement;
@@ -51,6 +52,7 @@ export class UI {
         <div class="objectives-card">
           <div class="objectives-title">Mission · Distribute</div>
           <div class="objectives" id="objectives"></div>
+          <div class="people-remaining" id="people-remaining"></div>
         </div>
       </div>
 
@@ -101,6 +103,7 @@ export class UI {
 
     this.tokenEl = this.root.querySelector('#token-value')!;
     this.objectivesEl = this.root.querySelector('#objectives')!;
+    this.peopleRemainingEl = this.root.querySelector('#people-remaining')!;
     this.prompt = this.root.querySelector('#interact-prompt')!;
     this.npcPanel = this.root.querySelector('#npc-panel')!;
     this.toastBox = this.root.querySelector('#toast-box')!;
@@ -133,6 +136,10 @@ export class UI {
     });
 
     this.bus.on('objectivesChanged', (list) => this.renderObjectives(list));
+
+    this.bus.on('peopleRemaining', (n) => {
+      this.peopleRemainingEl.textContent = `People remaining: ${n}`;
+    });
 
     this.bus.on('promptChanged', (text) => {
       if (text) {
